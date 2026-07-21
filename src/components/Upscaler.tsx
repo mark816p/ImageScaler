@@ -39,7 +39,7 @@ export default function Upscaler() {
       }
     };
 
-    worker.current.onerror = (e) => {
+    worker.current.onerror = () => {
       setStatus('error');
       setErrorMsg('The AI worker crashed! This usually happens if the image is too large for the browser memory limit. Try a smaller image.');
     };
