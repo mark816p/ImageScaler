@@ -1,26 +1,32 @@
-# ImageScaler
+# React + TypeScript + Vite
 
-ImageScaler is a privacy-first, locally-running AI image upscaler built for the web.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## Features
-- **Local Execution:** Uses Transformers.js to run the Swin2SR AI model directly inside your browser. Your images never leave your device.
-- **Modern UI:** Clean, responsive design mimicking high-end native apps with light and dark mode support.
-- **Privacy First:** 100% offline-capable (after initial model load), zero uploads.
+Currently, two official plugins are available:
 
-## Usage
-Simply drag and drop your image, wait for the AI model to load (only takes a moment on the first run), and download your 2x upscaled result.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Development
-To run this locally, you can use any standard static web server.
-```bash
-python -m http.server
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the Oxlint configuration
+
+If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+
+```json
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "options": {
+    "typeAware": true
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  }
+}
 ```
-or
-```bash
-npx serve .
-```
 
-## Credits
-- Built with [Tailwind CSS](https://tailwindcss.com/)
-- Icons by [Lucide](https://lucide.dev/)
-- AI powered by [Transformers.js](https://huggingface.co/docs/transformers.js/) and `Xenova/swin2SR-classical-sr-x2-64`
+See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
