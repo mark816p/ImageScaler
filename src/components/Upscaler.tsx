@@ -39,6 +39,11 @@ export default function Upscaler() {
       }
     };
 
+    worker.current.onerror = (e) => {
+      setStatus('error');
+      setErrorMsg('The AI worker crashed! This usually happens if the image is too large for the browser memory limit. Try a smaller image.');
+    };
+
     return () => {
       worker.current?.terminate();
     };
@@ -92,17 +97,43 @@ export default function Upscaler() {
     setProgress(0);
     setErrorMsg(null);
 
-    // Read as Data URL to pass to worker
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result && worker.current) {
-        worker.current.postMessage({
-          action: 'upscale',
-          imageUrl: e.target.result
-        });
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 512;
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = (height / width) * maxDim;
+          width = maxDim;
+        } else {
+          width = (width / height) * maxDim;
+          height = maxDim;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/png');
+        if (worker.current) {
+          worker.current.postMessage({
+            action: 'upscale',
+            imageUrl: dataUrl
+          });
+        }
+      } else {
+        setStatus('error');
+        setErrorMsg('Failed to create canvas context for resizing.');
       }
     };
-    reader.readAsDataURL(f);
+    img.onerror = () => {
+      setStatus('error');
+      setErrorMsg('Failed to load image.');
+    };
+    img.src = url;
   };
 
   const reset = () => {
