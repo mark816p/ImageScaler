@@ -6,24 +6,28 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
   useEffect(() => {
-    const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    setTheme(isDark ? 'dark' : 'light');
+    try {
+      const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      setTheme(isDark ? 'dark' : 'light');
+    } catch (e) {
+      setTheme('dark');
+    }
   }, []);
 
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
-      localStorage.theme = 'dark';
+      try { localStorage.theme = 'dark'; } catch(e) {}
     } else {
       document.documentElement.classList.remove('dark');
-      localStorage.theme = 'light';
+      try { localStorage.theme = 'light'; } catch(e) {}
     }
   }, [theme]);
 
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
 
   return (
-    <div className="flex flex-col flex-1 items-center w-full min-h-screen">
+    <div className="flex flex-col flex-1 items-center w-full min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans transition-colors duration-200">
       <div className="max-w-4xl flex flex-col flex-1 w-full h-full px-6 md:px-8">
         <header className="relative z-50 pt-8 pb-4">
           <nav className="flex justify-between items-center w-full">
