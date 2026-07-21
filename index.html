@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageScaler - Local AI Image Upscaler</title>
+    <meta name="description" content="Upscale your images locally using AI. Free, offline, no uploads.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module" src="./app.js" defer></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        zinc: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            300: '#d4d4d8',
+                            400: '#a1a1aa',
+                            500: '#71717a',
+                            600: '#52525b',
+                            700: '#3f3f46',
+                            800: '#27272a',
+                            900: '#18181b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .drag-active {
+            border-color: #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.1) !important;
+        }
+        #result-container {
+            display: none;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col bg-zinc-50 dark:bg-[#0e0e10] text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
+    <div class="flex flex-col flex-1 items-center w-full">
+        <div class="max-w-4xl flex flex-col flex-1 w-full h-full px-6 md:px-8">
+            <header class="relative z-50 pt-8 pb-4">
+                <nav class="flex justify-between items-center w-full">
+                    <a href="#" class="group flex items-center gap-3">
+                        <div class="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black p-2 rounded-xl group-hover:scale-105 transition-transform">
+                            <i data-lucide="image-plus" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-2xl font-semibold tracking-tight">ImageScaler</span>
+                    </a>
+                    <div class="flex gap-4">
+                        <button id="theme-toggle" class="p-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+                            <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                            <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                        </button>
+                        <a href="https://github.com/mark816p/ImageScaler" target="_blank" class="p-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+                            <i data-lucide="github" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                </nav>
+            </header>
+
+            <main class="flex-1 flex flex-col items-center justify-center py-12">
+                <div class="w-full max-w-2xl flex flex-col gap-8">
+                    <div class="text-center space-y-4">
+                        <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Enhance images <span class="text-blue-500">locally.</span></h1>
+                        <p class="text-lg text-zinc-600 dark:text-zinc-400">Upscale your images privately on your own device using advanced AI. No uploads required.</p>
+                    </div>
+
+                    <div id="drop-zone" class="relative group cursor-pointer flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl bg-zinc-100/50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all">
+                        <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" />
+                        <div class="flex flex-col items-center gap-4 pointer-events-none">
+                            <div class="p-4 rounded-full bg-white dark:bg-zinc-800 shadow-sm group-hover:scale-110 transition-transform">
+                                <i data-lucide="upload-cloud" class="w-8 h-8 text-blue-500"></i>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-lg font-medium">Click or drag image to upload</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Supports PNG, JPG, WEBP</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="loading-container" class="hidden flex-col items-center justify-center gap-4 p-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                        <p id="loading-text" class="text-lg font-medium animate-pulse">Loading AI model...</p>
+                        <div class="w-full max-w-md bg-zinc-200 dark:bg-zinc-800 rounded-full h-2.5 mt-2">
+                            <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div id="result-container" class="flex-col gap-6 w-full">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex flex-col gap-2">
+                                <p class="font-medium text-zinc-500 dark:text-zinc-400">Original</p>
+                                <div class="relative rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 aspect-video flex items-center justify-center">
+                                    <img id="original-image" class="max-w-full max-h-full object-contain" src="" alt="Original" />
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <p class="font-medium text-blue-500">Upscaled (2x)</p>
+                                <div class="relative rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 aspect-video flex items-center justify-center">
+                                    <img id="upscaled-image" class="max-w-full max-h-full object-contain" src="" alt="Upscaled" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-center gap-4 mt-4">
+                            <button id="reset-btn" class="px-6 py-2.5 rounded-xl font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors">
+                                Try Another
+                            </button>
+                            <button id="download-btn" class="px-6 py-2.5 rounded-xl font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                                <i data-lucide="download" class="w-4 h-4"></i> Download Result
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <footer class="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                <p>Powered by Transformers.js • Running 100% locally in your browser</p>
+            </footer>
+        </div>
+    </div>
+    <script>
+        lucide.createIcons();
+        
+        // Theme toggle logic
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+        });
+    </script>
+</body>
+</html>
